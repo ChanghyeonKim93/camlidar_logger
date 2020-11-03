@@ -1,0 +1,15 @@
+<launch>
+    <arg name="directory" default="/home/larrkchlaptop/camlidar_data/"/>
+
+    <arg name="n_cameras" default="2"/>
+    <arg name="n_lidars" default="4"/>
+    
+    <!--remap from="/os1_cloud_node/points" to="lidar0/velodyne_points"/-->
+
+    <node pkg="camlidar_logger" name="camlidar_logger_node" type="camlidar_logger_node" output="screen">
+        <param name="n_cameras" type="int" value="$(arg n_cameras)"/>
+        <param name="n_lidars" type="int" value="$(arg n_lidars)"/>
+        <param name="directory" type="string" value="$(arg directory)"/>
+    </node>
+
+</launch>
