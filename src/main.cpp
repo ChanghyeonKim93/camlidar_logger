@@ -33,15 +33,22 @@ int main(int argc, char **argv) {
     ros::param::get("~n_cameras", n_cams);
     ros::param::get("~n_lidars", n_lidars);
     ros::param::get("~directory", dir);
-    
+
+    vector<string> image_names;
+    image_names.resize(n_cams);
+    for(int i = 0; i < n_cams; ++i){
+        stringstream ss_;
+        ss_ << "~image_name" << i;
+        ros::param::get(ss_.str(), image_names[i]);
+        ss_.clear();
+    }
+
     
     // Ground control system class
-    
     stringstream ss1;
     ss1 << dir << currentDateTime() << "/";
     string save_dir = ss1.str();
     cout << "save directory:[" << save_dir << "]\n";
-
 
     // user input manual.
     string user_manual;
@@ -63,7 +70,7 @@ int main(int argc, char **argv) {
 
     ss << "\n |\n L\n";
 
-    CamlidarLogger* camlidar_logger = new CamlidarLogger(nh, n_cams, n_lidars, save_dir);
+    CamlidarLogger* camlidar_logger = new CamlidarLogger(nh, n_cams, n_lidars, image_names, save_dir);
 
     int cnt = 0;
     while(ros::ok())
@@ -71,6 +78,7 @@ int main(int argc, char **argv) {
         // no need 'spinOnce()' for all loop!!
         int c = getch(); // call my own non-blocking input function
         if(c == 's') {
+            camlidar_logger->saveAllData();
             cout << "\n\n[Operation]: snapshot & save the current scene.\n";
         }
         else if(c == 'q') {

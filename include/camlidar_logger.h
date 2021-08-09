@@ -46,7 +46,7 @@ string itos(double x)
 
 class CamlidarLogger{
 public:
-    CamlidarLogger(ros::NodeHandle& nh, int n_cams, int n_lidars, const string& save_dir);
+    CamlidarLogger(ros::NodeHandle& nh, int n_cams, int n_lidars, vector<string>& image_names, const string& save_dir);
     ~CamlidarLogger();
 
 
@@ -107,14 +107,10 @@ private:
 
 };
 
-
-
-
-
-
-
-
-CamlidarLogger::CamlidarLogger(ros::NodeHandle& nh, int n_cams, int n_lidars, const string& save_dir)
+CamlidarLogger::CamlidarLogger(ros::NodeHandle& nh, 
+int n_cams, int n_lidars, 
+vector<string>& image_names,
+const string& save_dir)
 : nh_(nh), it_(nh_), n_cams_(n_cams), n_lidars_(n_lidars),save_dir_(save_dir)
 {
     // default.
@@ -128,7 +124,8 @@ CamlidarLogger::CamlidarLogger(ros::NodeHandle& nh, int n_cams, int n_lidars, co
         flag_imgs_ = new bool[n_cams_];
         for(int i = 0; i < n_cams_; i++) {
             flag_imgs_[i] = false;
-            string name_temp = "/" + itos(i) + "/image_raw";
+            //string name_temp = "/" + itos(i) + "/image_raw";
+            string name_temp = image_names[i];
             topicnames_imgs_.push_back(name_temp);
             subs_imgs_.push_back(it_.subscribe(topicnames_imgs_[i], 1, boost::bind(&CamlidarLogger::callbackImage, this, _1, i)));
         }
@@ -171,12 +168,12 @@ CamlidarLogger::CamlidarLogger(ros::NodeHandle& nh, int n_cams, int n_lidars, co
 	system(folder_create_command.c_str());
 
     // make image saving directories
-    for(int i = 0; i< n_cams_; i++){
+    for(int i = 0; i< n_cams_; i++) {
         folder_create_command = "mkdir " + save_dir_ + "cam" + itos(i) + "/";
 	    system(folder_create_command.c_str());
     }
     // make lidar data saving directories
-    for(int i = 0; i < n_lidars_; i++){
+    for(int i = 0; i < n_lidars_; i++) {
         folder_create_command = "mkdir " + save_dir_ + "lidar" + itos(i) + "/";
 	    system(folder_create_command.c_str());
     }
@@ -258,15 +255,15 @@ void CamlidarLogger::pointcloud2tobuffersOusterOS1Gen264(const sensor_msgs::Poin
     buf_lidars_npoints[id] = msg_lidar->width*msg_lidar->height;
 
     int n_pts_channel = msg_lidar->width;
-    int n_channels = msg_lidar->height;
+    int n_channels    = msg_lidar->height;
 
-    cout << "width: "<<n_pts_channel<<endl;
-    cout << "height: "<<n_channels<<endl;
-    cout << "point step: "<<msg_lidar->point_step<<endl;
-    cout << "row step: "<<msg_lidar->row_step<<endl;
+    cout << "width: "      << n_pts_channel << endl;
+    cout << "height: "     << n_channels    << endl;
+    cout << "point step: " << msg_lidar->point_step << endl;
+    cout << "row step: "   << msg_lidar->row_step   << endl;
 
     for(int i = 0; i < 9; i++)
-        cout <<msg_lidar->fields[i].name <<" / "<<msg_lidar->fields[i].offset<<endl;
+        cout << msg_lidar->fields[i].name << " / " << msg_lidar->fields[i].offset<<endl;
     
 
     for(int ch = 0; ch < msg_lidar->height; ch++) {
@@ -297,10 +294,11 @@ void CamlidarLogger::pointcloud2tobuffersOusterOS1Gen264(const sensor_msgs::Poin
 
 void CamlidarLogger::callbackImage(const sensor_msgs::ImageConstPtr& msg, const int& id){
     cv_bridge::CvImagePtr cv_ptr;
-	cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8); // BGR8, BAYER_RGGB8 , MONO8
+	//cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8); // BGR8, BAYER_RGGB8 , MONO8
+	cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8); // BGR8, BAYER_RGGB8 , MONO8
 	*(buf_imgs_ + id) = cv_ptr->image;
 
-    cout << "  GCS get! [" << id << "] image.\n";
+    // cout << "  GCS get! [" << id << "] image.\n";
     flag_imgs_[id] = true;
 };
 
@@ -319,7 +317,8 @@ void CamlidarLogger::callbackLidar(const sensor_msgs::PointCloud2ConstPtr& msg_l
     pcl::fromROSMsg(output, *temp);
 
     int n_pts = temp->points.size();
-    cout <<"n_pts lidar: " <<n_pts<<endl;
+    // cout <<"n_pts lidar: " <<n_pts<<endl;
+
     flag_lidars_[id] = true;
 
     bool flag_allimages = true;
@@ -367,7 +366,7 @@ void CamlidarLogger::saveLidarDataRingTime(const std::string& file_name, const i
     output_file.precision(6);
     output_file.setf(std::ios_base::fixed, std::ios_base::floatfield);
 
-    if(output_file.is_open()){
+    if( output_file.is_open() ) {
         output_file << "# .PCD v.7 - Point Cloud Data file format\n";
         output_file << "VERSION .7\n";
         output_file << "FIELDS x y z intensity ring time\n";
@@ -379,7 +378,7 @@ void CamlidarLogger::saveLidarDataRingTime(const std::string& file_name, const i
         output_file << "VIEWPOINT 0 0 0 1 0 0 0\n";
         output_file << "POINTS " << n_pts<< "\n";
         output_file << "DATA ascii\n";
-        for(int i = 0; i < n_pts; i++){
+        for(int i = 0; i < n_pts; i++) {
             output_file << *(buf_lidars_x[id] + i)<<" ";
             output_file << *(buf_lidars_y[id] + i)<<" ";
             output_file << *(buf_lidars_z[id] + i)<<" ";
@@ -387,27 +386,26 @@ void CamlidarLogger::saveLidarDataRingTime(const std::string& file_name, const i
             output_file << *(buf_lidars_ring[id] + i)<<" ";
             output_file << *(buf_lidars_time[id] + i)<<"\n";
         }
-    }  
+    }
 };
 
 
-void CamlidarLogger::saveAllData(){
+void CamlidarLogger::saveAllData() {
     // save images
     bool static png_param_on = false;
 	vector<int> static png_parameters;
-	if (png_param_on == false)
-	{
+	if (png_param_on == false) {
 		png_parameters.push_back(CV_IMWRITE_PNG_COMPRESSION); // We save with no compression for faster processing
 		png_parameters.push_back(0);
 		png_param_on = true;
 	}
-    for(int id = 0; id < n_cams_; id++){
-        string file_name = save_dir_ + "/cam" + itos(id) + "/" + itos(current_seq_) + ".png";
+    for(int id = 0; id < n_cams_;   id++) {
+        string file_name = save_dir_ + "/cam"   + itos(id) + "/" + itos(current_seq_) + ".png";
 	    cv::imwrite(file_name, *(buf_imgs_ + id), png_parameters);
     }
 
     // save lidars
-    for(int id = 0; id <n_lidars_; id++){
+    for(int id = 0; id < n_lidars_; id++) {
         string file_name = save_dir_ + "/lidar" + itos(id) + "/" + itos(current_seq_) + ".pcd";
         saveLidarDataRingTime(file_name, id);
     }
@@ -417,12 +415,17 @@ void CamlidarLogger::saveAllData(){
     std::ofstream output_file(file_name, std::ios::app);
     output_file.precision(6);
     output_file.setf(std::ios_base::fixed, std::ios_base::floatfield);
-    if(output_file.is_open()){
+    if( output_file.is_open() ) {
         output_file << current_seq_ << " ";
-        for(int i = 0; i < n_cams_; i++) output_file << "/cam" << i << "/" << current_seq_ << ".png ";
-        for(int i = 0; i < n_lidars_; i++) output_file << "/lidar" << i << "/" << current_seq_ << ".pcd ";
+        for(int i = 0; i < n_cams_; i++)   
+            output_file << "/cam" << i <<   "/" << current_seq_ << ".png ";
+
+        for(int i = 0; i < n_lidars_; i++) 
+            output_file << "/lidar" << i << "/" << current_seq_ << ".pcd ";
+
         output_file << "\n";
     }
+    printf("Save topics - seq [%d]\n", current_seq_);
     ++current_seq_;
 };
 

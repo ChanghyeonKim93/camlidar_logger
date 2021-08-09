@@ -2,11 +2,10 @@
     <arg name="directory" default="/home/junhakim/camlidar_data/"/>
 
     <arg name="n_cameras" default="2"/>
-    <arg name="n_lidars" default="1"/>
+    <arg name="n_lidars" default="0"/>
 
-    <arg name="image_name0" default="zed/left/image_raw"/>
-    <arg name="image_name1" default="zed/right/image_raw"/>
-    
+    <arg name="image_name0" default="/zed/zed_node/left_raw/image_raw_color"/>
+    <arg name="image_name1" default="/zed/zed_node/right_raw/image_raw_color"/>
     
     <!--remap from="/os1_cloud_node/points" to="lidar0/velodyne_points"/-->
 
