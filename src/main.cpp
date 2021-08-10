@@ -19,7 +19,7 @@ const std::string currentDateTime(){
     strftime(buf, sizeof(buf), "%Y-%m-%d_%H_%M_%S", &tstruct);
 
     return buf;
-}
+} 
 
 using namespace std;
 

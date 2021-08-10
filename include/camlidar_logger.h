@@ -321,11 +321,6 @@ void CamlidarLogger::callbackLidar(const sensor_msgs::PointCloud2ConstPtr& msg_l
 
     flag_lidars_[id] = true;
 
-    bool flag_allimages = true;
-    for(int i = 0; i < n_cams_; i++) flag_allimages &= flag_imgs_[i];
-
-    if(flag_allimages) saveAllData();
-    for(int i = 0; i < n_cams_; i++) flag_imgs_[i] = false;
 };
 
 

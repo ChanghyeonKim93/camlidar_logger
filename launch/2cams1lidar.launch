@@ -4,12 +4,9 @@
     <arg name="n_cameras" default="2"/>
     <arg name="n_lidars" default="1"/>
 
-    <arg name="image_name0" default="zed/left/image_raw"/>
-    <arg name="image_name1" default="zed/right/image_raw"/>
+    <arg name="image_name0" default="/zed/zed_node/left_raw/image_raw_color"/>
+    <arg name="image_name1" default="/zed/zed_node/right_raw/image_raw_color"/>
     
-    
-    <!--remap from="/os1_cloud_node/points" to="lidar0/velodyne_points"/-->
-
     <node pkg="camlidar_logger" name="camlidar_logger_node" type="camlidar_logger_node" output="screen">
         <param name="n_cameras" type="int" value="$(arg n_cameras)"/>
         <param name="n_lidars" type="int" value="$(arg n_lidars)"/>
@@ -17,5 +14,12 @@
         <param name="image_name1" type="string" value="$(arg image_name1)"/>
         <param name="directory" type="string" value="$(arg directory)"/>
     </node>
+    
+<group ns = "lidar0">
+<include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch">
+  <arg name="device_ip" value="192.168.1.101" />
+  <arg name="port" value="2367" />
+</include>
+</group>
 
 </launch>
