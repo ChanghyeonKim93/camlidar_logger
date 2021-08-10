@@ -14,12 +14,15 @@
         <param name="image_name1" type="string" value="$(arg image_name1)"/>
         <param name="directory" type="string" value="$(arg directory)"/>
     </node>
-    
+
 <group ns = "lidar0">
 <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch">
   <arg name="device_ip" value="192.168.1.101" />
   <arg name="port" value="2367" />
 </include>
 </group>
+
+<include file="$(find zed_wrapper)/launch/zed.launch">
+</include>
 
 </launch>
